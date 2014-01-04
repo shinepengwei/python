@@ -2,7 +2,7 @@
 
 import string
 CODEC='gb2312'
-isDebug=True
+isDebug=False
 zhuanyiChar='\\'
 charToZhuanYi={'\"':'"','\\':'\\','\b':'b','\f':'f','\n':'n','\r':'r','\t':'t','\u':'u'}
 def dealZhuanyi(c):
@@ -112,7 +112,8 @@ def getNumber(str):
     number=string.atof(str[beginIndex:beginIndex+curIndex])
     if isDebug:print "DEBUG:getNumber(",str,"):",number,beginIndex+curIndex
     return number,beginIndex+curIndex
-print getNumber("  234")
+
+
 def getKeywords(str):
     if isDebug:print "DEBUG:getKeywords(",str,") - Begin"
     curIndex=0
@@ -204,6 +205,30 @@ def convertValueToJson(v):
 
     
     print "ERROR:convertValueToJson()"
+
+def deepCopy(v):
+    if not isinstance(v,list) and not isinstance(v,dict):
+        return v
+    if isinstance(v,list):
+        resultList=[]
+        for e in v:
+            resultList.append(deepCopy(e))
+        return resultList
+    if isinstance(v,dict):
+        resultDict={}
+        for key in v.keys():
+            resultDict[key]=deepCopy(v[key])
+        return resultDict
+if isDebug:
+    print "deepCopy():"
+    d={"a":"b","c":[100,200]}
+    print id(d["c"])
+    b=deepCopy(d)
+    print id(b["c"])
+    c=d
+    print id(c["c"])
+    print "----\n"
+
     
 class JsonParser:
     'Json 解析'
@@ -218,15 +243,65 @@ class JsonParser:
     def loadJson(self,f):
         if isDebug:print "DEBUG:loadJson(",f,")-begin"
         fp=open(f,'r')
-        print fp.encoding
         data=[line.strip() for line in fp.readlines()]
         fp.close
-        print data
         s=""
         for e in data:
             s+=e
-        print s
         JsonParser.load(self,s)
+    def  dumpJson(self,f):
+        if isDebug:print "DEBUG:dumpJson(",f,")-begin"
+        fp=open(f,'w')
+        s=JsonParser.dump(self)
+        fp.write(s.encode(CODEC))
+        fp.close
+    def loadDict(self,d):
+        for key in d.keys():
+            if not isinstance(key,str) or not instance(key,unicode):
+                self.dic[key]=deepCopy(d[key])
+    def dumpDict(self):
+        newDic=deepCopy(self.dic)
+        return newDic
+    def __setitem__(self,key,value):
+        self.dic[key]=deepCopy(value)
+    def __getitem__ (self,key):
+        return deepCopy(self.dic[key])
+    def update(self,d):
+        for key in d.keys():
+            self.dic[key]=deepCopy(d[key])
+
+
+
+test_json_str = '   {     "中文" : [   "1\\r23"    ,   "abc\\\\"     ,     true ,   {   "b"   :   "ca"   }   ]   ,   "b"   :   null}   '
+test_dict={"中文":["1\r23","abc\\",True,{"b":"ca"}],"b":None}
+                 
+a1 = JsonParser()
+a2 = JsonParser()
+a3 = JsonParser()
+
+a1.load(test_json_str)
+d1 = a1.dumpDict()
+
+print "a1.dump():",a1.dump()
+print "d1:",d1
+                 
+a2.loadDict(d1)
+a2.dumpJson("jsonparse.txt")
+a3.loadJson("jsonparse.txt")
+d3 = a3.dumpDict()
+
+print "d3:",d3
+
+print a1.dump()
+print a2.dump()
+print a3.dump()
+
+'''
+str = '   {     "中文" : [   "1\\r23"    ,   "abc\\\\"     ,     true ,   {   "b"   :   "ca"   }   ]   ,   "b"   :   null}   '
+a1 = JsonParser()
+a1.loadJson("json.txt")
+print "\n"
+a1.dumpJson("json2.txt")
 
 print len(' "s"')
 print getString(' "s"')
@@ -284,3 +359,4 @@ print a1.dump()
 str='cc\bc'
 print str
 print convertStringToJson(str)
+'''
