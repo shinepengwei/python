@@ -1,12 +1,14 @@
-# -*- coding: cp936 -*-
+# -*- coding: utf-8 -*-
+
 
 import string
-CODEC='gb2312'
+CODEC='utf-8'
 isDebug=False
 zhuanyiChar='\\'
 charToZhuanYi={'\"':'"','\\':'\\','\b':'b','\f':'f','\n':'n','\r':'r','\t':'t','\u':'u'}
+ignoreChar=[' ','\n','\t']
 def dealZhuanyi(c):
-    '''¸ù¾İ×ªÒâ×Ö·ûºóÃæµÄ×Ö·û£¬Êä³ö×ªÒâºóµÄ×Ö·û'''
+    '''æ ¹æ®è½¬æ„å­—ç¬¦åé¢çš„å­—ç¬¦ï¼Œè¾“å‡ºè½¬æ„åçš„å­—ç¬¦'''
     if c=='"': return '"'
     if c=='\\': return '\\'
     if c=='/':return '/'
@@ -15,20 +17,19 @@ def dealZhuanyi(c):
     if c=='n':return '\n'
     if c=='r':return '\r'
     if c=='t':return '\t'
-    if c=='u':return '\u'
-    print "ERROR:dealZhuanyi(), not a zhuanyi char"
+    raise ValueError,  "ERROR:dealZhuanyi(), not a zhuanyi char"
     return None
 
 def getString(str):
     if isDebug: print "DEBUG:getString(",str,") - Begin"
-    '''¶ÔÓÚjson×Ö·û´®£¬·µ»ØstrÇ°ÃæµÄstringÀàĞÍ£¬²¢ÇÒ·µ»ØstringÀàĞÍ½áÊøµÄË÷Òı¡£'''
-    curIndex=0#Ö»´¦ÀíÇ°ÃæµÄ¿Õ¸ñ£¬²»´¦ÀíºóÃæµÄ
-    while str[curIndex]==" ": curIndex+=1
+    '''å¯¹äºjsonå­—ç¬¦ä¸²ï¼Œè¿”å›strå‰é¢çš„stringç±»å‹ï¼Œå¹¶ä¸”è¿”å›stringç±»å‹ç»“æŸçš„ç´¢å¼•ã€‚'''
+    curIndex=0#åªå¤„ç†å‰é¢çš„ç©ºæ ¼ï¼Œä¸å¤„ç†åé¢çš„
+    while str[curIndex] in ignoreChar: curIndex+=1
     if str[curIndex] != '"':
-        print "ERR: getString(), not a string"
+        raise ValueError, "Error: getString(), not a string:"+str
     curIndex+=1
     zhuanYiFlag=False
-    resultStr=""
+    resultStr=unicode("")
     end=0
     while curIndex<len(str):
         c=str[curIndex]
@@ -36,7 +37,13 @@ def getString(str):
         curIndex+=1
         if zhuanYiFlag:
             zhuanYiFlag=False
-            resultStr=resultStr+dealZhuanyi(c)
+            if c=='u':
+                unistr=str[curIndex:curIndex+4]
+                unistr='u"\\u'+unistr+'"'
+                resultStr=resultStr+eval(unistr)
+                curIndex+=4
+            else:
+                resultStr=resultStr+dealZhuanyi(c)
             continue
         if c==zhuanyiChar:
             zhuanYiFlag=True
@@ -47,7 +54,7 @@ def getString(str):
         if i!=0:
             resultStr=resultStr+c
     
-    resultStr=resultStr.decode(CODEC)
+   #resultStr=resultStr.decode(CODEC)
     
     # not isinstance(resultStr,unicode): resultStr=unicode(resultStr)
     if isDebug:print "DEBUG:getString(",str,"):",resultStr,end+1
@@ -57,59 +64,72 @@ def getObject(str):
     if isDebug:print "DEBUG:getObject(",str,") - Begin"
     dic={}
     curIndex=0
-    while str[curIndex]==" ": curIndex+=1
+    while str[curIndex] in ignoreChar: curIndex+=1
     if str[curIndex]!='{':
-        print "ERROR:no {"
+        raise ValueError, "Error: getObject(), not a Object:no {,:"+str
     curIndex+=1
+    while str[curIndex] in ignoreChar: curIndex+=1
+    if str[curIndex]=='}':
+        return dic,curIndex+1
     while True:
         key,index=getString(str[curIndex:])
         curIndex+=index
-        while str[curIndex]==" ": curIndex+=1
+        while str[curIndex] in ignoreChar: curIndex+=1
         if str[curIndex]!=':':
-            print "ERROR: getObject: have no ':'"
+            raise ValueError,  "ERROR: getObject: have no ':',:"+str
         curIndex+=1
         value,index=getValue(str[curIndex:])
         curIndex+=index
         dic[key]=value
-        while str[curIndex]==" ": curIndex+=1
+        while str[curIndex] in ignoreChar: curIndex+=1
         if str[curIndex]!=",":
             break
         curIndex+=1
-    while str[curIndex]==" ": curIndex+=1
+    while str[curIndex] in ignoreChar: curIndex+=1
     if str[curIndex]!='}':
-        print "ERROR: getObject(): have no '}'"
+        raise ValueError,  "ERROR: getObject(): have no '}',:"+str
     return dic,curIndex+1
 
 def getArray(str):
     if isDebug:print "DEBUG:getArray(",str,") - Begin"
     arr=[]
     curIndex=0
-    while str[curIndex]==" ": curIndex+=1
+    while str[curIndex] in ignoreChar: curIndex+=1
     if str[curIndex]!='[':
-        print "ERROR: getArray()"
+        raise ValueError,  "ERROR: getArray(),:"+str
     curIndex+=1
+    while str[curIndex] in ignoreChar: curIndex+=1
+    if str[curIndex]==']':
+        return arr,curIndex+1
     while True:
         value,index=getValue(str[curIndex:])
         arr.append(value)
         curIndex+=index
-        while str[curIndex]==" ": curIndex+=1
+        while str[curIndex] in ignoreChar: curIndex+=1
         if str[curIndex]!=",":
             break
-        while str[curIndex]==" ": curIndex+=1
+        while str[curIndex] in ignoreChar: curIndex+=1
         curIndex+=1
-    while str[curIndex]==" ": curIndex+=1
+    while str[curIndex] in ignoreChar: curIndex+=1
     if str[curIndex]!=']':
-        print "ERROR: getArray(): have no ']'"
+        raise ValueError,  "ERROR: getArray(): have no ']',:"+str
     return arr,curIndex+1
 
 def getNumber(str):
     if isDebug:print "DEBUG:getNumber(",str,") - Begin"
     curIndex=0
     beginIndex=0
-    while str[beginIndex]==" ": beginIndex+=1
+    while str[beginIndex] in ignoreChar: beginIndex+=1
+    isFloat=False
     while beginIndex+curIndex<len(str) and str[beginIndex+curIndex] in "+-0123456789.eE":
+        if str[beginIndex+curIndex]=='.' : isFloat=True
         curIndex+=1
-    number=string.atof(str[beginIndex:beginIndex+curIndex])
+    if isFloat:
+        number=float(str[beginIndex:beginIndex+curIndex])
+        if number==float('inf'):
+            raise ValueError,"number:"+str[beginIndex:beginIndex+curIndex]+" out of range range"
+    else:
+        number=int(str[beginIndex:beginIndex+curIndex])
     if isDebug:print "DEBUG:getNumber(",str,"):",number,beginIndex+curIndex
     return number,beginIndex+curIndex
 
@@ -117,7 +137,7 @@ def getNumber(str):
 def getKeywords(str):
     if isDebug:print "DEBUG:getKeywords(",str,") - Begin"
     curIndex=0
-    while str[curIndex]==" ": curIndex+=1
+    while str[curIndex] in ignoreChar: curIndex+=1
     
     if str.find("true",curIndex,curIndex+4)!=-1:
         if isDebug:print "DEBUG:getKeywords(",str,")",True,curIndex+4
@@ -128,35 +148,35 @@ def getKeywords(str):
     if str.find("null",curIndex,curIndex+4)!=-1:
         if isDebug:print "DEBUG:getKeywords(",str,")",None,curIndex+4
         return None,curIndex+4
-    if isDebug:print "ERROR:getKeywords():not a keyword"
+    raise ValueError,  "ERROR:getKeywords():not a keyword,:"+str
     
     
 def getValue(str):
     value=None
     curIndex=0
-    while str[curIndex]==" ": curIndex+=1
+    while str[curIndex] in ignoreChar: curIndex+=1
     if str[curIndex]=='{':
-        value,index=getObject(str)
+        value,index=getObject(str[curIndex:])
         if isDebug: print "DEBUG:getValue(),getObject:",value,index
     elif str[curIndex]=='[':
-        value,index=getArray(str)
+        value,index=getArray(str[curIndex:])
         if isDebug:print "DEBUG:getValue(),getArray:",value,index
     elif str[curIndex]=='"':
-        value,index=getString(str)
+        value,index=getString(str[curIndex:])
         if isDebug:print "DEBUG:getValue(),getString:",value,index
     elif str[curIndex] in "+-0123456789":
-        value,index=getNumber(str)
+        value,index=getNumber(str[curIndex:])
         if isDebug:print "DEBUG:getValue(),getNumber:",value,index
     else:
-        value,index=getKeywords(str)
+        value,index=getKeywords(str[curIndex:])
         if isDebug:print "DEBUG:getValue(),getKeywords:",value,index
-    return value,index
+    return value,curIndex+index
 
 
 def convertStringToJson(s):
     '''
-    ½«×Ö·û´®×ª»»ÎªJSONÊ¶±ğµÄ×Ö·û´®£¬
-    Èç'a"bc',×ª»»Îª'"a/"bc'
+    å°†å­—ç¬¦ä¸²è½¬æ¢ä¸ºJSONè¯†åˆ«çš„å­—ç¬¦ä¸²ï¼Œ
+    å¦‚'a"bc',è½¬æ¢ä¸º'"a/"bc'
     '''
     if isDebug:print "DEBUG:convertStringToJson(",s,")-begin"
     strResult='"'
@@ -172,9 +192,10 @@ def convertStringToJson(s):
 def convertListToJson(l):
     if isDebug:print "DEBUG:convertListToJson(",l,")-begin"
     strR="["
-    for e in l:
-        strR=strR+convertValueToJson(e)+','
-    strR=strR[:-1]
+    if len(l)>0:
+        for e in l:
+            strR=strR+convertValueToJson(e)+','
+        strR=strR[:-1]
     strR+=']'
     if isDebug:print "DEBUG:convertListToJson(",l,")",strR
     return strR
@@ -182,9 +203,10 @@ def convertListToJson(l):
 def convertDictToJson(d):
     if isDebug:print "DEBUG:convertDictToJson(",d,")-begin"
     strResult="{"
-    for key in d.keys():
-        strResult+=convertStringToJson(key)+":"+convertValueToJson(d[key])+","
-    strResult=strResult[:-1]
+    if len(d)>0:
+        for key in d.keys():
+            strResult+=convertStringToJson(key)+":"+convertValueToJson(d[key])+","
+        strResult=strResult[:-1]
     strResult+="}"
     if isDebug:print "DEBUG:convertDictToJson(",d,"):",strResult
     return strResult
@@ -192,8 +214,8 @@ def convertDictToJson(d):
 def convertValueToJson(v):
 
     if isDebug:print "DEBUG:convertValueToJson(",v,")-begin",type(v)
-    if v==True:     return 'true'
-    if v==False:    return 'false'
+    if v==True and isinstance(v,bool):     return 'true'
+    if v==False and isinstance(v,bool):    return 'false'
     if v==None:     return 'null'
 
     
@@ -208,7 +230,8 @@ def convertValueToJson(v):
 
 def deepCopy(v):
     if not isinstance(v,list) and not isinstance(v,dict):
-        return v
+        if isinstance(v,str): return unicode(v,CODEC)
+        else:return v
     if isinstance(v,list):
         resultList=[]
         for e in v:
@@ -231,18 +254,26 @@ if isDebug:
 
     
 class JsonParser:
-    'Json ½âÎö'
+    'Json è§£æ'
     def __init__(self):
         self.dic={}
     def load(self,s):
         if isDebug:print "DEBUG:load(",s,")-begin"
+        
+        if not isinstance(s,unicode): s=s.decode(CODEC)
+        
+        if isDebug:print "DEBUG:load(",s,")-begin"
+        #try:
         self.dic,num=getObject(s)
     def dump(self):
         if isDebug:print "DEBUG:dump(",self.dic,")-begin"
         return convertDictToJson(self.dic)
     def loadJson(self,f):
         if isDebug:print "DEBUG:loadJson(",f,")-begin"
-        fp=open(f,'r')
+        try:
+            fp=open(f,'r')
+        except IOError,args:
+            raise IOError,'File operation error:'+f
         data=[line.strip() for line in fp.readlines()]
         fp.close
         s=""
@@ -251,13 +282,17 @@ class JsonParser:
         JsonParser.load(self,s)
     def  dumpJson(self,f):
         if isDebug:print "DEBUG:dumpJson(",f,")-begin"
-        fp=open(f,'w')
+        try:
+            fp=open(f,'w')
+        except IOError,args:
+            raise IOError,'File operation error:'+f
         s=JsonParser.dump(self)
         fp.write(s.encode(CODEC))
         fp.close
     def loadDict(self,d):
         for key in d.keys():
-            if not isinstance(key,str) or not instance(key,unicode):
+            if isinstance(key,str) or isinstance(key,unicode):
+                if isinstance(key,str): key=unicode(key,CODEC)
                 self.dic[key]=deepCopy(d[key])
     def dumpDict(self):
         newDic=deepCopy(self.dic)
@@ -271,92 +306,3 @@ class JsonParser:
             self.dic[key]=deepCopy(d[key])
 
 
-
-test_json_str = '   {     "ÖĞÎÄ" : [   "1\\r23"    ,   "abc\\\\"     ,     true ,   {   "b"   :   "ca"   }   ]   ,   "b"   :   null}   '
-test_dict={"ÖĞÎÄ":["1\r23","abc\\",True,{"b":"ca"}],"b":None}
-                 
-a1 = JsonParser()
-a2 = JsonParser()
-a3 = JsonParser()
-
-a1.load(test_json_str)
-d1 = a1.dumpDict()
-
-print "a1.dump():",a1.dump()
-print "d1:",d1
-                 
-a2.loadDict(d1)
-a2.dumpJson("jsonparse.txt")
-a3.loadJson("jsonparse.txt")
-d3 = a3.dumpDict()
-
-print "d3:",d3
-
-print a1.dump()
-print a2.dump()
-print a3.dump()
-
-'''
-str = '   {     "ÖĞÎÄ" : [   "1\\r23"    ,   "abc\\\\"     ,     true ,   {   "b"   :   "ca"   }   ]   ,   "b"   :   null}   '
-a1 = JsonParser()
-a1.loadJson("json.txt")
-print "\n"
-a1.dumpJson("json2.txt")
-
-print len(' "s"')
-print getString(' "s"')
-
-print len('"s"')
-print getString('"s"')
-
-str4 =r'[1,3,"dd"]'
-print getValue(str4)
-str4 =r'[1,3, "dd" ]'
-print getValue(str4)
-
-
-
-
-   
-str1='"ÎÒ"'
-print getString(str1)
-
-str2=r'2334.55'
-print getValue(str2)
-str3=r"null"
-print getValue(str3)
-print "\n"
-str4 =r'[1,3, "dd"]'
-print getValue(str4)
-print '\n'
-str5 = r'{"a":   234,   "b":   null}'
-print getObject(str5)
-
-print '\n'
-str = '{"ÖĞÎÄ"   :[   "1\\"\\r23","abc",   true,{"b":"ca"}],"b":null  }   '
-print type(str)
-dic,index=getObject(str)
-print dic
-print dic.keys()[0]
-
-print "\n\n______________________________"
-str="ÖĞÎÄ2"
-print str
-print str.decode(CODEC)
-print unicode(str,CODEC)
-print type(str.decode(CODEC))
-#for i in range(1,len(str)):
-    
-
-str = '   {     "ÖĞÎÄ" : [   "1\\r23"    ,   "abc\\\\"     ,     true ,   {   "b"   :   "ca"   }   ]   ,   "b"   :   null}   '
-a1 = JsonParser()
-a1.loadJson("json.txt")
-s=a1.dump()
-print "a1.dump():",s
-a1.load(str)
-print "\n\n\na1.dump():"
-print a1.dump()
-str='cc\bc'
-print str
-print convertStringToJson(str)
-'''
