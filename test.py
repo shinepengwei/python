@@ -75,19 +75,17 @@ d1=a1.dumpDict()
 print 'd1:\n',d1
 
 print 'test_dict:\n',test_dict
-print 'test_dict==d1 :\n'
-if test_dict==d1:
-    print 'test_dict==d1  -correct'
+assert test_dict==d1
 
 a2.loadDict(d1)
-if id(a2["root"])!=id(d1["root"]):
-    print 'deep_copy work correct!'
+assert id(a2["root"])!=id(d1["root"])
+
 a2.dumpJson(file_path)
 a3.loadJson(file_path)
 d3 = a3.dumpDict()
 print 'd3:\n',d3
-if d1==d3:
-    print 'd1==d3:Correct'
+assert d1==d3
+
 d4={"root":2,"a":3}
 a3.update(d4)
 a2["root"]=2
@@ -95,112 +93,3 @@ a2["a"]=3
 print 'a3.dump():\n',a3.dump()
 print 'a2.dump():\n',a2.dump()
 
-'''
-print targetDict
-d1 = a1.dumpDict()
-print d1
-if targetDict == d1:
-    print True
-
-in2 = r'\ucafe'
-in2 = '{"NetEase":[1.23444444444e+2,"Forth", "'+in2+'"]}'
-
-s = u"/\\\"\ucafe\ubabe\uab98\ufcde\ubcda\uef4a\x08\x0c\n\r\t`1~!@#$%^&*()_+-=[]{}|;:',./<>?"
-sv = None
-targetDict = {"NetEase":["Third","Forth",{s:sv}]}
-
-
-test_json_str =u'   {     "cc" : [   "1\\r23"    ,   "abc\\\\"     ,     true ,   s{   "b"   :   "ca"   }   ]   ,   "b"   :   null}   '
-test_dict={"cc":[u"1\r23","abc\\",True,{"b":"ca"}],"b":None}
-print     test_json_str         
-a1 = JsonParser()
-a2 = JsonParser()
-a3 = JsonParser()
-
-a1.load(test_json_str)
-d1 = a1.dumpDict()
-
-print "a1.dump():",a1.dump()
-print "d1:",d1
-     
-a2.loadDict(d1)
-a2.dumpJson("jsonparse.txt")
-a3.loadJson("jsonparse.txt")
-d3 = a3.dumpDict()
-
-print "d3:",d3
-
-print a1.dump()
-print "cc:",a1["NetEase"][2],len(a1["NetEase"][2])
-print a2.dump()
-print a3.dump()
-a1['b']=["1\r23","abc\\",True,{"b":"ca"}]
-print a1.dump()
-print len(u'\ucafe')
-
-
-
-
-str = '   {     "中文" : [   "1\\r23"    ,   "abc\\\\"     ,     true ,   {   "b"   :   "ca"   }   ]   ,   "b"   :   null}   '
-a1 = JsonParser()
-a1.loadJson("json.txt")
-print "\n"
-a1.dumpJson("json2.txt")
-
-print len(' "s"')
-print getString(' "s"')
-
-print len('"s"')
-print getString('"s"')
-
-str4 =r'[1,3,"dd"]'
-print getValue(str4)
-str4 =r'[1,3, "dd" ]'
-print getValue(str4)
-
-
-
-
-   
-str1='"我"'
-print getString(str1)
-
-str2=r'2334.55'
-print getValue(str2)
-str3=r"null"
-print getValue(str3)
-print "\n"
-str4 =r'[1,3, "dd"]'
-print getValue(str4)
-print '\n'
-str5 = r'{"a":   234,   "b":   null}'
-print getObject(str5)
-
-print '\n'
-str = '{"中文"   :[   "1\\"\\r23","abc",   true,{"b":"ca"}],"b":null  }   '
-print type(str)
-dic,index=getObject(str)
-print dic
-print dic.keys()[0]
-
-print "\n\n______________________________"
-str="中文2"
-print str
-print str.decode(CODEC)
-print unicode(str,CODEC)
-print type(str.decode(CODEC))
-#for i in range(1,len(str)):
-    
-
-str = '   {     "中文" : [   "1\\r23"    ,   "abc\\\\"     ,     true ,   {   "b"   :   "ca"   }   ]   ,   "b"   :   null}   '
-a1 = JsonParser()
-a1.loadJson("json.txt")
-s=a1.dump()
-print "a1.dump():",s
-a1.load(str)
-print "\n\n\na1.dump():"
-print a1.dump()
-str='cc\bc'
-print str
-print convertStringToJson(str)
-'''

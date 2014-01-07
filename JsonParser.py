@@ -5,7 +5,7 @@ import string
 CODEC='utf-8'
 isDebug=False
 zhuanyiChar='\\'
-charToZhuanYi={'\"':'"','\\':'\\','\b':'b','\f':'f','\n':'n','\r':'r','\t':'t','\u':'u'}
+charToZhuanYi={'\"':'"','\\':'\\','\b':'b','\f':'f','\n':'n','\r':'r','\t':'t'}
 ignoreChar=[' ','\n','\t']
 def dealZhuanyi(c):
     '''根据转意字符后面的字符，输出转意后的字符'''
@@ -122,7 +122,7 @@ def getNumber(str):
     while str[beginIndex] in ignoreChar: beginIndex+=1
     isFloat=False
     while beginIndex+curIndex<len(str) and str[beginIndex+curIndex] in "+-0123456789.eE":
-        if str[beginIndex+curIndex]=='.' : isFloat=True
+        if str[beginIndex+curIndex] in '.Ee' : isFloat=True
         curIndex+=1
     if isFloat:
         number=float(str[beginIndex:beginIndex+curIndex])
@@ -175,7 +175,7 @@ def getValue(str):
 
 def convertStringToJson(s):
     '''
-    将字符串转换为JSON识别的字符串，
+    将字符串转换为识别的字符串，
     如'a"bc',转换为'"a/"bc'
     '''
     if isDebug:print "DEBUG:convertStringToJson(",s,")-begin"
