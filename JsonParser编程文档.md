@@ -62,7 +62,6 @@ Python对象--（Python对象转为Json字符串）-->Json字符串
 
 ##深拷贝
 深拷贝只需要处理容器类型，包括数组和字典。
-http://www.codingart.info/python-storage/
 
 设计递归函数deepCopy(v)，如果v为非容器对象，直接返回v。
 
@@ -93,11 +92,6 @@ http://www.codingart.info/python-storage/
 
 但是，遇到\u时需要额外处理，因此这是代表着Unicode编码格式，`\uXXXX`表示一个Unicode编码字符，保存到Unicode里面是一个字符，所以当遇到\u时，使用eval特殊处理。
 
-——————————————————————————————————————————————————————————————————————————————————————————
-
-另外，2.5和2.7还是有一定的区别的，据说是set和float('inf')，但是我在2.7使用了inf依然通过测试。
-
-版本问题我并没有深究。
 
 
 

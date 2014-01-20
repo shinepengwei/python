@@ -7,7 +7,7 @@ test_json_str=r'''
 [
 	"JSON Test Pattern pass1",
 	{"object with 1 member":["array with 1 element"]},
-	{},
+	{   },
 	[],
 	-42,
 	true,
@@ -93,3 +93,5 @@ a2["a"]=3
 print 'a3.dump():\n',a3.dump()
 print 'a2.dump():\n',a2.dump()
 
+a2["a"]=(1,2,3)
+print 'a2.dump():\n',a2.dump()
