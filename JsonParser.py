@@ -21,7 +21,7 @@ def dealZhuanyi(c):
     return None
 def dealIgnoreChar(string,curIndex):
     '解析文本时，当在value类型的前面和后面出现的空格、换行符和制表符，需要忽略'
-    while string[curIndex] in ignoreChar: curIndex+=1
+    while string[curIndex] in ignoreChar: curIndex+=1#效率不高，可以改为set或者frozenset
     return curIndex
     
 def getString(string):
@@ -36,7 +36,7 @@ def getString(string):
     zhuanYiFlag=False
     resultStr=unicode("")
     end=0
-    while curIndex<len(string):
+    while curIndex<len(string):##每次循环都计算一次string长度。
         c=string[curIndex]
         i=curIndex
         curIndex+=1
